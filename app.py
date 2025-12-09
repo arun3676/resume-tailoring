@@ -150,7 +150,7 @@ QUALITY CHECK BEFORE RETURNING:
 Return ONLY valid JSON - no markdown, no code blocks, no preamble:"""
 
         message = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-3-5-sonnet-20241022",
             max_tokens=4096,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -181,8 +181,10 @@ Return ONLY valid JSON - no markdown, no code blocks, no preamble:"""
         
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail=f"JSON parsing error: {str(e)}")
+    except anthropic.APIError as e:
+        raise HTTPException(status_code=500, detail=f"Anthropic API error: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
