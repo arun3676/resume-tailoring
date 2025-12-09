@@ -159,7 +159,7 @@ QUALITY CHECK BEFORE RETURNING:
 Return ONLY valid JSON - no markdown, no code blocks, no preamble:"""
 
         message = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-20241022",
             max_tokens=4096,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -193,8 +193,11 @@ Return ONLY valid JSON - no markdown, no code blocks, no preamble:"""
         print(f"Raw content: {content[:500] if 'content' in dir() else 'N/A'}")
         raise HTTPException(status_code=500, detail=f"JSON parsing error: {str(e)}")
     except anthropic.APIError as e:
+        error_detail = f"Anthropic API error: {str(e)}"
         print(f"Anthropic API error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Anthropic API error: {str(e)}")
+        if "model:" in str(e) and "not found" in str(e):
+            error_detail = "Model not found - please check API access"
+        raise HTTPException(status_code=400, detail=error_detail)
     except HTTPException:
         raise
     except Exception as e:
