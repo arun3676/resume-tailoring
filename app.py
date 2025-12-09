@@ -12,6 +12,7 @@ import anthropic
 import json
 import os
 import traceback
+import httpx
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -64,7 +65,8 @@ async def analyze_job(request: JobRequest):
                 detail="ANTHROPIC_API_KEY not configured. Please set it in Render environment variables."
             )
         
-        client = anthropic.Anthropic(api_key=api_key)
+        http_client = httpx.Client()
+        client = anthropic.Anthropic(api_key=api_key, http_client=http_client)
         
         prompt = f"""You are an expert resume writer and ATS optimization specialist. Analyze this job description and generate tailored resume content for Arun Kumar Chukkala.
 
@@ -157,7 +159,7 @@ QUALITY CHECK BEFORE RETURNING:
 Return ONLY valid JSON - no markdown, no code blocks, no preamble:"""
 
         message = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-3-5-sonnet-20241022",
             max_tokens=4096,
             messages=[{"role": "user", "content": prompt}]
         )
