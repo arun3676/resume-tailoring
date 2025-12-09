@@ -11,6 +11,7 @@ from pydantic import BaseModel
 import anthropic
 import json
 import os
+import traceback
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -43,7 +44,13 @@ async def read_root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    """Health check endpoint"""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    return {
+        "status": "healthy",
+        "api_key_configured": bool(api_key),
+        "api_key_prefix": api_key[:10] + "..." if api_key else None
+    }
 
 @app.post("/api/analyze")
 async def analyze_job(request: JobRequest):
@@ -180,11 +187,19 @@ Return ONLY valid JSON - no markdown, no code blocks, no preamble:"""
         }
         
     except json.JSONDecodeError as e:
+        print(f"JSON parsing error: {str(e)}")
+        print(f"Raw content: {content[:500] if 'content' in dir() else 'N/A'}")
         raise HTTPException(status_code=500, detail=f"JSON parsing error: {str(e)}")
     except anthropic.APIError as e:
+        print(f"Anthropic API error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Anthropic API error: {str(e)}")
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+        error_msg = f"Server error: {type(e).__name__}: {str(e)}"
+        print(f"Exception: {error_msg}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 if __name__ == "__main__":
     import uvicorn
