@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-resume-tailor
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheck:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

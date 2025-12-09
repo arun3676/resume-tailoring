@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Tailor - Smart Resume Customization</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@300;400;500;600&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #0066FF; --primary-dark: #0052CC; --secondary: #00D9FF;
+            --accent: #FF3366; --bg-dark: #0A0E27; --bg-card: #151B3D;
+            --text-primary: #FFFFFF; --text-secondary: #A0AEC0;
+            --success: #10B981; --border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 102, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 217, 255, 0.15) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        
+        header { text-align: center; padding: 3rem 0; position: relative; }
+        
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle { color: var(--text-secondary); font-size: 1.2rem; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover { transform: translateY(-5px); }
+        
+        .card-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card-title::before {
+            content: '▸';
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+        
+        textarea {
+            min-height: 280px;
+            resize: vertical;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 102, 255, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-download {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .loading.active { display: block; }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .results-panel { display: none; }
+        .results-panel.active { display: block; }
+        
+        .analysis-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .analysis-section h3 {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+        
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .tag {
+            padding: 0.4rem 1rem;
+            background: rgba(0, 102, 255, 0.2);
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-family: 'Space Mono', monospace;
+            color: var(--secondary);
+        }
+        
+        .bullet-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .bullet-list li {
+            padding: 0.5rem 0 0.5rem 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .bullet-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: rgba(0, 102, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        
+        .stat-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        
+        .notification.show { transform: translateX(0); }
+        .notification.success { border-left: 4px solid var(--success); }
+        .notification.error { border-left: 4px solid var(--accent); }
+        
+        .info-box {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid var(--secondary);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .info-box strong { color: var(--secondary); }
+        
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        a { color: var(--secondary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-connected { background: var(--success); }
+        .status-disconnected { background: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Resume Tailor</h1>
+            <p class="subtitle">Transform any job description into a perfectly tailored resume in seconds</p>
+        </header>
+
+        <div class="info-box">
+            <strong>📌 Quick Start:</strong> 
+            1. Paste job description below
+            2. Click analyze
+            3. Download your tailored resume!
+            <div style="margin-top: 0.5rem; font-size: 0.85rem;">
+                <span class="status-indicator" id="statusIndicator"></span>
+                Backend: <span id="backendStatus">Checking...</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2 class="card-title">Job Details</h2>
+                
+                <form id="jobForm">
+                    <div class="form-group">
+                        <label for="companyName">Company Name (Optional)</label>
+                        <input type="text" id="companyName" placeholder="e.g., Google, Microsoft">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="roleTitle">Role Title (Optional)</label>
+                        <input type="text" id="roleTitle" placeholder="e.g., Senior AI Engineer">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobDescription">Job Description *</label>
+                        <textarea id="jobDescription" placeholder="Paste the complete job description..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="analyzeBtn">
+                        🚀 Analyze & Tailor Resume
+                    </button>
+                </form>
+                
+                <div class="loading" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>AI is analyzing and tailoring your resume...</p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 1rem;">Usually takes 15-30 seconds</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Tailored Resume</h2>
+                
+                <div id="initialState">
+                    <p style="color: var(--text-secondary); text-align: center; padding: 3rem 0;">
+                        📄 Your tailored resume will appear here after analysis
+                    </p>
+                </div>
+                
+                <div class="results-panel" id="resultsPanel">
+                    <div class="stats-grid" id="statsGrid"></div>
+                    
+                    <div class="analysis-section">
+                        <h3>📌 Professional Summary</h3>
+                        <p id="summaryText" style="color: var(--text-secondary);"></p>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h3>🎯 Top Keywords</h3>
+                        <div class="keyword-tags" id="keywordTags"></div>
+                    </div>
+                    
+                    <div class="analysis-section">
+                        <h3>💼 Experience Highlights</h3>
+                        <ul class="bullet-list" id="experienceBullets"></ul>
+                    </div>
+                    
+                    <button class="btn btn-download" onclick="downloadResume()">
+                        ⬇️ Download PDF Resume
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built with 💙 by Arun Kumar Chukkala | Powered by Claude AI</p>
+        </footer>
+    </div>
+
+    <div class="notification" id="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:8002' : '/api';
+        let currentAnalysis = null;
+
+        const RESUME_DATA = {
+            name: "Arun Kumar Chukkala",
+            location: "SF, California, USA",
+            email: "arunkiran721@gmail.com",
+            phone: "+1 (409) 549-3003",
+            github: "https://github.com/arun3676",
+            githubText: "GitHub",
+            portfolio: "https://arun1807.netlify.app",
+            portfolioText: "Portfolio",
+            linkedin: "https://www.linkedin.com/in/arun-kumar-chukkala-391768204/",
+            linkedinText: "LinkedIn",
+            twitter: "https://x.com/arunn0718",
+            twitterText: "X/Twitter",
+            education: [
+                {
+                    institution: "Lamar University",
+                    degree: "MS in Computer Science",
+                    location: "Beaumont, TX, USA",
+                    dates: "Jan 2023 – Dec 2024"
+                },
+                {
+                    institution: "Sri Indu Institute of Engineering & Technology",
+                    degree: "BTech in Computer Science",
+                    location: "Hyderabad, India",
+                    dates: "Aug 2016 – May 2020"
+                }
+            ],
+            certifications: [
+                "DeepLearning.AI: Generative AI for Everyone, LangChain for LLM Application Development",
+                "Coursera: Machine Learning Specialization (Andrew Ng, Stanford University)"
+            ],
+            projects: [
+                {
+                    name: "LLM Code Analyzer",
+                    github: "https://github.com/arun3676/llm-code-analyzer",
+                    demo: "https://huggingface.co/spaces/arunn7/ai-code-analyzer",
+                    bullets: [
+                        "Multi-agent code review application using GPT-4o, Claude, and DeepSeek for automated analysis",
+                        "Identifies security vulnerabilities, performance issues, and maintainability concerns",
+                        "Deployed on Hugging Face Spaces with Streamlit, implementing LangSmith for agent observability"
+                    ]
+                },
+                {
+                    name: "AI Learning Path Generator",
+                    github: "https://github.com/arun3676/ai-learning-path-generator",
+                    demo: "https://ai-learning-path-api.onrender.com",
+                    bullets: [
+                        "RAG pipeline (ChromaDB + LlamaIndex) that reduced API token usage by 45% via semantic caching",
+                        "Deployed on Render with automated CI/CD pipelines"
+                    ]
+                },
+                {
+                    name: "Medical Imaging Assistant (Research Prototype)",
+                    github: "https://github.com/arun3676/multimodal-medical-diagnosis",
+                    demo: "https://multimodal-medical-diagnosis.onrender.com",
+                    bullets: [
+                        "Research prototype using Gemini 2.5 Pro with RAG-enhanced knowledge base to retrieve PubMed literature for image interpretation",
+                        "Deployed via Docker for scalable quality workflows"
+                    ]
+                },
+                {
+                    name: "Job Search Assistant",
+                    github: "https://github.com/arun3676/agentception",
+                    demo: "https://agentception.vercel.app",
+                    bullets: [
+                        "Multi-agent app (FastAPI + Next.js) to automate resume analysis, job matching, and application tracking",
+                        "Human-in-the-loop controls for autonomous decision-making"
+                    ]
+                }
+            ]
+        };
+
+        async function checkBackend() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    document.getElementById('backendStatus').textContent = '✅ Connected';
+                    document.getElementById('statusIndicator').className = 'status-indicator status-connected';
+                    return true;
+                }
+            } catch (error) {
+                document.getElementById('backendStatus').textContent = '❌ Not Running';
+                document.getElementById('statusIndicator').className = 'status-indicator status-disconnected';
+                return false;
+            }
+        }
+
+        window.onload = () => {
+            checkBackend();
+        };
+
+        document.getElementById('jobForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const jobDescription = document.getElementById('jobDescription').value;
+            const companyName = document.getElementById('companyName').value || 'Company';
+            const roleTitle = document.getElementById('roleTitle').value || 'AI_Engineer';
+            
+            if (!jobDescription.trim()) {
+                showNotification('Please paste a job description', 'error');
+                return;
+            }
+            
+            const backendOk = await checkBackend();
+            if (!backendOk) {
+                showNotification('Backend server not running! Please start: python app_fixed.py', 'error');
+                return;
+            }
+            
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('loadingState').classList.add('active');
+            document.getElementById('initialState').style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        job_description: jobDescription,
+                        company_name: companyName,
+                        role_title: roleTitle
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Analysis failed');
+                }
+                
+                const data = await response.json();
+                currentAnalysis = data.analysis;
+                currentAnalysis.company_name = companyName;
+                currentAnalysis.role_title = roleTitle;
+                
+                displayResults(currentAnalysis);
+                showNotification('Resume tailored successfully! 🎉', 'success');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Analysis failed: ' + error.message, 'error');
+                document.getElementById('initialState').style.display = 'block';
+            } finally {
+                document.getElementById('analyzeBtn').disabled = false;
+                document.getElementById('loadingState').classList.remove('active');
+            }
+        });
+
+        function displayResults(analysis) {
+            document.getElementById('resultsPanel').classList.add('active');
+            
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <span class="stat-number">${analysis.keywords?.length || 0}</span>
+                    <span class="stat-label">Keywords</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">${analysis.technical_skills?.length || 0}</span>
+                    <span class="stat-label">Skill Categories</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">${(analysis.experience_bullets_jefferies?.length || 0) + (analysis.experience_bullets_experian?.length || 0)}</span>
+                    <span class="stat-label">Experience Bullets</span>
+                </div>
+            `;
+            
+            document.getElementById('summaryText').textContent = analysis.summary;
+            
+            document.getElementById('keywordTags').innerHTML = analysis.keywords?.slice(0, 15).map(keyword => 
+                `<span class="tag">${keyword}</span>`
+            ).join('') || '';
+            
+            const bullets = [
+                ...(analysis.experience_bullets_jefferies || []).slice(0, 3),
+                ...(analysis.experience_bullets_experian || []).slice(0, 2)
+            ];
+            document.getElementById('experienceBullets').innerHTML = bullets.map(bullet => 
+                `<li>${bullet}</li>`
+            ).join('');
+        }
+
+        function downloadResume() {
+            if (!currentAnalysis) {
+                showNotification('Please analyze a job description first', 'error');
+                return;
+            }
+
+            showNotification('Generating PDF...', 'success');
+            
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'letter'
+                    });
+                    
+                    // Use Times New Roman / serif font to match original
+                    doc.setFont('times', 'normal');
+                    
+                    let y = 20;
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const margin = 25;
+                    const contentWidth = pageWidth - 2 * margin;
+                    
+                    // NAME - Centered, Large, Serif
+                    doc.setFontSize(24);
+                    doc.setFont('times', 'bold');
+                    doc.text(RESUME_DATA.name, pageWidth / 2, y, { align: 'center' });
+                    
+                    // Contact line with CLICKABLE links
+                    y += 8;
+                    doc.setFontSize(10);
+                    doc.setFont('times', 'normal');
+                    
+                    // Calculate positions for clickable links in header
+                    const contactParts = [
+                        { text: RESUME_DATA.location, link: null },
+                        { text: ' | ', link: null },
+                        { text: RESUME_DATA.email, link: `mailto:${RESUME_DATA.email}` },
+                        { text: ' | ', link: null },
+                        { text: RESUME_DATA.phone, link: null },
+                        { text: ' | ', link: null },
+                        { text: 'GitHub', link: RESUME_DATA.github },
+                        { text: ' | ', link: null },
+                        { text: 'Portfolio', link: RESUME_DATA.portfolio },
+                        { text: ' | ', link: null },
+                        { text: 'LinkedIn', link: RESUME_DATA.linkedin }
+                    ];
+                    
+                    const contactLine = `${RESUME_DATA.location} | ${RESUME_DATA.email} | ${RESUME_DATA.phone} | GitHub | Portfolio | LinkedIn`;
+                    const contactWidth = doc.getTextWidth(contactLine);
+                    let xPos = (pageWidth - contactWidth) / 2;
+                    
+                    contactParts.forEach(part => {
+                        doc.text(part.text, xPos, y);
+                        if (part.link) {
+                            const linkWidth = doc.getTextWidth(part.text);
+                            doc.link(xPos, y - 3, linkWidth, 4, { url: part.link });
+                        }
+                        xPos += doc.getTextWidth(part.text);
+                    });
+                    
+                    // PROFESSIONAL SUMMARY
+                    y += 10;
+                    doc.setFontSize(12);
+                    doc.setFont('times', 'bold');
+                    doc.text('Professional Summary', margin, y);
+                    
+                    // Horizontal line under section header
+                    y += 1;
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, y, pageWidth - margin, y);
+                    
+                    y += 6;
+                    doc.setFontSize(10);
+                    doc.setFont('times', 'normal');
+                    const summaryLines = doc.splitTextToSize(currentAnalysis.summary, contentWidth);
+                    doc.text(summaryLines, margin, y);
+                    y += summaryLines.length * 5 + 6;
+                    
+                    // TECHNICAL SKILLS
+                    doc.setFontSize(12);
+                    doc.setFont('times', 'bold');
+                    doc.text('Technical Skills', margin, y);
+                    
+                    y += 1;
+                    doc.line(margin, y, pageWidth - margin, y);
+                    
+                    y += 6;
+                    doc.setFontSize(10);
+                    
+                    // Format skills as in original: "Category: items"
+                    (currentAnalysis.technical_skills || []).forEach(skill => {
+                        if (y > 260) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        // Bold the category name before the colon
+                        const colonIndex = skill.indexOf(':');
+                        if (colonIndex > 0) {
+                            const category = skill.substring(0, colonIndex + 1);
+                            const items = skill.substring(colonIndex + 1);
+                            
+                            doc.setFont('times', 'bold');
+                            doc.text(category, margin, y);
+                            
+                            const categoryWidth = doc.getTextWidth(category);
+                            doc.setFont('times', 'normal');
+                            const itemLines = doc.splitTextToSize(items, contentWidth - categoryWidth - 2);
+                            doc.text(itemLines[0], margin + categoryWidth + 1, y);
+                            
+                            y += 5;
+                            
+                            for (let i = 1; i < itemLines.length; i++) {
+                                doc.text(itemLines[i], margin, y);
+                                y += 5;
+                            }
+                        } else {
+                            doc.setFont('times', 'normal');
+                            const skillLines = doc.splitTextToSize(skill, contentWidth);
+                            doc.text(skillLines, margin, y);
+                            y += skillLines.length * 5;
+                        }
+                    });
+                    
+                    // PROFESSIONAL EXPERIENCE
+                    y += 4;
+                    if (y > 240) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setFontSize(12);
+                    doc.setFont('times', 'bold');
+                    doc.text('Professional Experience', margin, y);
+                    
+                    y += 1;
+                    doc.line(margin, y, pageWidth - margin, y);
+                    
+                    // Jefferies
+                    y += 6;
+                    doc.setFontSize(10);
+                    doc.setFont('times', 'bold');
+                    doc.text('AI/ML Engineer (Contract)', margin, y);
+                    doc.setFont('times', 'normal');
+                    doc.text(', Jefferies Group – Remote, USA', margin + doc.getTextWidth('AI/ML Engineer (Contract)'), y);
+                    
+                    doc.text('Mar 2024 – Present', pageWidth - margin, y, { align: 'right' });
+                    
+                    y += 5;
+                    doc.setFont('times', 'italic');
+                    doc.text('Concurrent with Master\'s program', margin, y);
+                    
+                    y += 5;
+                    doc.setFont('times', 'normal');
+                    (currentAnalysis.experience_bullets_jefferies || []).forEach(bullet => {
+                        if (y > 265) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        const bulletLines = doc.splitTextToSize('• ' + bullet, contentWidth - 3);
+                        doc.text(bulletLines, margin, y);
+                        y += bulletLines.length * 5;
+                    });
+                    
+                    // Experian
+                    y += 3;
+                    if (y > 240) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setFont('times', 'bold');
+                    doc.text('Associate AI/ML Engineer', margin, y);
+                    doc.setFont('times', 'normal');
+                    doc.text(', Experian – Hyderabad, India', margin + doc.getTextWidth('Associate AI/ML Engineer'), y);
+                    
+                    doc.text('Jan 2021 – Dec 2022', pageWidth - margin, y, { align: 'right' });
+                    y += 5;
+                    
+                    doc.setFont('times', 'normal');
+                    (currentAnalysis.experience_bullets_experian || []).forEach(bullet => {
+                        if (y > 265) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        const bulletLines = doc.splitTextToSize('• ' + bullet, contentWidth - 3);
+                        doc.text(bulletLines, margin, y);
+                        y += bulletLines.length * 5;
+                    });
+                    
+                    // FEATURED PROJECTS with CLICKABLE links
+                    y += 4;
+                    if (y > 220) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setFontSize(12);
+                    doc.setFont('times', 'bold');
+                    doc.text('Featured Projects', margin, y);
+                    
+                    y += 1;
+                    doc.line(margin, y, pageWidth - margin, y);
+                    y += 6;
+                    
+                    doc.setFontSize(10);
+                    RESUME_DATA.projects.forEach((project, idx) => {
+                        if (y > 250) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        // Project name in bold
+                        doc.setFont('times', 'bold');
+                        doc.text(project.name, margin, y);
+                        
+                        // GitHub | Demo on the right - CLICKABLE
+                        doc.setFont('times', 'normal');
+                        const githubText = 'GitHub';
+                        const demoText = 'Demo';
+                        const separator = ' | ';
+                        
+                        const githubWidth = doc.getTextWidth(githubText);
+                        const separatorWidth = doc.getTextWidth(separator);
+                        const demoWidth = doc.getTextWidth(demoText);
+                        const totalWidth = githubWidth + separatorWidth + demoWidth;
+                        
+                        const githubX = pageWidth - margin - totalWidth;
+                        const demoX = githubX + githubWidth + separatorWidth;
+                        
+                        // GitHub link
+                        doc.textWithLink(githubText, githubX, y, { url: project.github });
+                        doc.text(separator, githubX + githubWidth, y);
+                        
+                        // Demo link
+                        doc.textWithLink(demoText, demoX, y, { url: project.demo });
+                        
+                        y += 5;
+                        
+                        // Project description bullets
+                        const desc = currentAnalysis.project_descriptions?.[idx] || project.bullets[0];
+                        const descLines = doc.splitTextToSize('• ' + desc, contentWidth - 3);
+                        doc.text(descLines, margin, y);
+                        y += descLines.length * 5 + 2;
+                    });
+                    
+                    // EDUCATION
+                    if (y > 220) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    y += 2;
+                    doc.setFontSize(12);
+                    doc.setFont('times', 'bold');
+                    doc.text('Education', margin, y);
+                    
+                    y += 1;
+                    doc.line(margin, y, pageWidth - margin, y);
+                    y += 6;
+                    
+                    doc.setFontSize(10);
+                    RESUME_DATA.education.forEach(edu => {
+                        if (y > 265) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        // Institution and degree on same line
+                        doc.setFont('times', 'bold');
+                        const leftText = `${edu.institution}, ${edu.degree}`;
+                        doc.text(leftText, margin, y);
+                        
+                        // Dates right-aligned
+                        doc.setFont('times', 'normal');
+                        doc.text(edu.dates, pageWidth - margin, y, { align: 'right' });
+                        
+                        y += 5;
+                        doc.text(edu.location, margin, y);
+                        y += 6;
+                    });
+                    
+                    // CERTIFICATIONS
+                    y += 2;
+                    doc.setFontSize(12);
+                    doc.setFont('times', 'bold');
+                    doc.text('Certifications', margin, y);
+                    
+                    y += 1;
+                    doc.line(margin, y, pageWidth - margin, y);
+                    y += 6;
+                    
+                    doc.setFontSize(10);
+                    doc.setFont('times', 'normal');
+                    RESUME_DATA.certifications.forEach(cert => {
+                        if (y > 265) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        const certLines = doc.splitTextToSize('• ' + cert, contentWidth - 3);
+                        doc.text(certLines, margin, y);
+                        y += certLines.length * 5;
+                    });
+                    
+                    const filename = `Arun_Chukkala_${currentAnalysis.company_name.replace(/\s+/g, '_')}_${currentAnalysis.role_title.replace(/\s+/g, '_')}.pdf`;
+                    doc.save(filename);
+                    
+                    showNotification('Resume downloaded successfully! 📄', 'success');
+                } catch (error) {
+                    console.error('PDF Error:', error);
+                    showNotification('PDF generation failed: ' + error.message, 'error');
+                }
+            }, 100);
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
