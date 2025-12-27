@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Tailor - Smart Resume Customization</title>
+    <title>AI Resume Tailor v4.0 - Intelligent Resume Customization</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@300;400;500;600&display=swap');
         
@@ -50,6 +50,17 @@
         }
         
         .subtitle { color: var(--text-secondary); font-size: 1.2rem; }
+        
+        .version-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            vertical-align: super;
+        }
         
         .main-content {
             display: grid;
@@ -200,6 +211,37 @@
             color: var(--secondary);
         }
         
+        .category-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .category-secondary {
+            background: rgba(0, 217, 255, 0.2);
+            border: 1px solid var(--secondary);
+        }
+        
+        .confidence-high { border-color: var(--success); }
+        .confidence-medium { border-color: #F59E0B; }
+        .confidence-low { border-color: var(--accent); }
+        
+        .core-focus-preview {
+            background: rgba(0, 102, 255, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-top: 1rem;
+        }
+        
         .keyword-tags {
             display: flex;
             flex-wrap: wrap;
@@ -239,14 +281,14 @@
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 1rem;
             margin: 2rem 0;
         }
         
         .stat-card {
             background: rgba(0, 102, 255, 0.1);
-            padding: 1.5rem;
+            padding: 1.2rem;
             border-radius: 12px;
             text-align: center;
             border: 1px solid var(--border);
@@ -254,14 +296,14 @@
         
         .stat-number {
             font-family: 'Space Mono', monospace;
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--secondary);
             display: block;
         }
         
         .stat-label {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             margin-top: 0.5rem;
             text-transform: uppercase;
@@ -325,15 +367,13 @@
 <body>
     <div class="container">
         <header>
-            <h1>AI Resume Tailor</h1>
-            <p class="subtitle">Transform any job description into a perfectly tailored resume in seconds</p>
+            <h1>AI Resume Tailor <span class="version-badge">v4.0</span></h1>
+            <p class="subtitle">Intelligent category detection • Specialist positioning • ATS optimized</p>
         </header>
 
         <div class="info-box">
-            <strong>📌 Quick Start:</strong> 
-            1. Paste job description below
-            2. Click analyze
-            3. Download your tailored resume!
+            <strong>🎯 How it works:</strong> 
+            1. Paste job description → 2. AI detects job category (RAG, Agentic, FinTech, MLOps, Research) → 3. Positions you as that specialist → 4. Download tailored PDF
             <div style="margin-top: 0.5rem; font-size: 0.85rem;">
                 <span class="status-indicator" id="statusIndicator"></span>
                 Backend: <span id="backendStatus">Checking...</span>
@@ -347,17 +387,19 @@
                 <form id="jobForm">
                     <div class="form-group">
                         <label for="companyName">Company Name (Optional)</label>
-                        <input type="text" id="companyName" placeholder="e.g., Google, Microsoft">
+                        <input type="text" id="companyName" placeholder="e.g., Google, Microsoft, Anthropic">
                     </div>
                     
                     <div class="form-group">
                         <label for="roleTitle">Role Title (Optional)</label>
-                        <input type="text" id="roleTitle" placeholder="e.g., Senior AI Engineer">
+                        <input type="text" id="roleTitle" placeholder="e.g., Senior AI Engineer, ML Platform Engineer">
                     </div>
                     
                     <div class="form-group">
                         <label for="jobDescription">Job Description *</label>
-                        <textarea id="jobDescription" placeholder="Paste the complete job description..." required></textarea>
+                        <textarea id="jobDescription" placeholder="Paste the complete job description here...
+
+Include requirements, responsibilities, and qualifications for best results." required></textarea>
                     </div>
                     
                     <button type="submit" class="btn" id="analyzeBtn">
@@ -367,7 +409,7 @@
                 
                 <div class="loading" id="loadingState">
                     <div class="spinner"></div>
-                    <p>AI is analyzing and tailoring your resume...</p>
+                    <p>AI is detecting job category and tailoring your resume...</p>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 1rem;">Usually takes 15-30 seconds</p>
                 </div>
             </div>
@@ -382,7 +424,20 @@
                 </div>
                 
                 <div class="results-panel" id="resultsPanel">
+                    <!-- Category Detection Display -->
+                    <div class="analysis-section" id="categorySection">
+                        <h3>🎯 Detected Job Category</h3>
+                        <div id="categoryDisplay"></div>
+                        <p id="categoryReasoning" style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);"></p>
+                    </div>
+                    
                     <div class="stats-grid" id="statsGrid"></div>
+                    
+                    <!-- Core Focus Areas Preview -->
+                    <div class="analysis-section">
+                        <h3>🔑 Core Focus Areas</h3>
+                        <div class="core-focus-preview" id="coreFocusPreview"></div>
+                    </div>
                     
                     <div class="analysis-section">
                         <h3>📌 Professional Summary</h3>
@@ -390,7 +445,7 @@
                     </div>
                     
                     <div class="analysis-section">
-                        <h3>🎯 Top Keywords</h3>
+                        <h3>🏷️ Top Keywords</h3>
                         <div class="keyword-tags" id="keywordTags"></div>
                     </div>
                     
@@ -407,7 +462,7 @@
         </div>
 
         <footer>
-            <p>Built with 💙 by Arun Kumar Chukkala | Powered by Claude AI</p>
+            <p>Built with 💙 by Arun Kumar Chukkala | Powered by Claude AI | v4.0 - Intelligent Category Detection</p>
         </footer>
     </div>
 
@@ -418,10 +473,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
-        // Use explicit host/port in local dev, root-relative in production
-        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:8002' : '';
+        // API URL configuration
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
         let currentAnalysis = null;
 
+        // =================================================================
+        // RESUME DATA - Your verified information (with clickable links)
+        // =================================================================
         const RESUME_DATA = {
             name: "Arun Kumar Chukkala",
             location: "SF, California, USA",
@@ -433,8 +491,6 @@
             portfolioText: "Portfolio",
             linkedin: "https://www.linkedin.com/in/arun-kumar-chukkala-391768204/",
             linkedinText: "LinkedIn",
-            twitter: "https://x.com/arunn0718",
-            twitterText: "X/Twitter",
             education: [
                 {
                     institution: "Lamar University",
@@ -457,49 +513,35 @@
                 {
                     name: "LLM Code Analyzer",
                     github: "https://github.com/arun3676/llm-code-analyzer",
-                    demo: "https://huggingface.co/spaces/arunn7/ai-code-analyzer",
-                    bullets: [
-                        "Multi-agent code review application using GPT-4o, Claude, and DeepSeek for automated analysis",
-                        "Identifies security vulnerabilities, performance issues, and maintainability concerns",
-                        "Deployed on Hugging Face Spaces with Streamlit, implementing LangSmith for agent observability"
-                    ]
+                    demo: "https://huggingface.co/spaces/arunn7/ai-code-analyzer"
                 },
                 {
                     name: "AI Learning Path Generator",
                     github: "https://github.com/arun3676/ai-learning-path-generator",
-                    demo: "https://ai-learning-path-api.onrender.com",
-                    bullets: [
-                        "RAG pipeline (ChromaDB + LlamaIndex) that reduced API token usage by 45% via semantic caching",
-                        "Deployed on Render with automated CI/CD pipelines"
-                    ]
+                    demo: "https://ai-learning-path-api.onrender.com"
                 },
                 {
                     name: "Medical Imaging Assistant (Research Prototype)",
                     github: "https://github.com/arun3676/multimodal-medical-diagnosis",
-                    demo: "https://multimodal-medical-diagnosis.onrender.com",
-                    bullets: [
-                        "Research prototype using Gemini 2.5 Pro with RAG-enhanced knowledge base to retrieve PubMed literature for image interpretation",
-                        "Deployed via Docker for scalable quality workflows"
-                    ]
+                    demo: "https://multimodal-medical-diagnosis.onrender.com"
                 },
                 {
                     name: "Job Search Assistant",
                     github: "https://github.com/arun3676/agentception",
-                    demo: "https://agentception.vercel.app",
-                    bullets: [
-                        "Multi-agent app (FastAPI + Next.js) to automate resume analysis, job matching, and application tracking",
-                        "Human-in-the-loop controls for autonomous decision-making"
-                    ]
+                    demo: "https://agentception.vercel.app"
                 }
             ]
         };
 
+        // =================================================================
+        // BACKEND CONNECTION CHECK
+        // =================================================================
         async function checkBackend() {
             try {
                 const response = await fetch(`${API_URL}/health`);
                 const data = await response.json();
                 if (data.status === 'healthy') {
-                    document.getElementById('backendStatus').textContent = '✅ Connected';
+                    document.getElementById('backendStatus').textContent = `✅ Connected (v${data.version || '4.0'})`;
                     document.getElementById('statusIndicator').className = 'status-indicator status-connected';
                     return true;
                 }
@@ -514,6 +556,9 @@
             checkBackend();
         };
 
+        // =================================================================
+        // FORM SUBMISSION - JOB ANALYSIS
+        // =================================================================
         document.getElementById('jobForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -526,9 +571,14 @@
                 return;
             }
             
+            if (jobDescription.trim().length < 100) {
+                showNotification('Job description seems too short. Please paste the complete description.', 'error');
+                return;
+            }
+            
             const backendOk = await checkBackend();
             if (!backendOk) {
-                showNotification('Backend server not running! Please start: python app_fixed.py', 'error');
+                showNotification('Backend server not running! Please start: python app.py', 'error');
                 return;
             }
             
@@ -570,12 +620,28 @@
             }
         });
 
+        // =================================================================
+        // DISPLAY RESULTS
+        // =================================================================
         function displayResults(analysis) {
             document.getElementById('resultsPanel').classList.add('active');
             
+            // Display detected category
+            const category = analysis.detected_category || {};
+            let categoryHTML = `<span class="category-badge">${formatCategory(category.primary)}</span>`;
+            if (category.secondary) {
+                categoryHTML += `<span class="category-badge category-secondary">${formatCategory(category.secondary)}</span>`;
+            }
+            if (category.confidence) {
+                categoryHTML += `<span class="tag confidence-${category.confidence.toLowerCase()}">${category.confidence} confidence</span>`;
+            }
+            document.getElementById('categoryDisplay').innerHTML = categoryHTML;
+            document.getElementById('categoryReasoning').textContent = category.reasoning || '';
+            
+            // Stats grid
             document.getElementById('statsGrid').innerHTML = `
                 <div class="stat-card">
-                    <span class="stat-number">${analysis.keywords?.length || 0}</span>
+                    <span class="stat-number">${(analysis.keywords_detected || analysis.keywords || []).length}</span>
                     <span class="stat-label">Keywords</span>
                 </div>
                 <div class="stat-card">
@@ -586,14 +652,25 @@
                     <span class="stat-number">${(analysis.experience_bullets_jefferies?.length || 0) + (analysis.experience_bullets_experian?.length || 0)}</span>
                     <span class="stat-label">Experience Bullets</span>
                 </div>
+                <div class="stat-card">
+                    <span class="stat-number">${analysis.project_descriptions?.length || 4}</span>
+                    <span class="stat-label">Projects</span>
+                </div>
             `;
             
+            // Core Focus Areas preview
+            document.getElementById('coreFocusPreview').textContent = analysis.core_focus_areas || 'Core Focus: AI/ML Engineering · LLM Applications · Production Systems';
+            
+            // Professional Summary
             document.getElementById('summaryText').textContent = analysis.summary;
             
-            document.getElementById('keywordTags').innerHTML = analysis.keywords?.slice(0, 15).map(keyword => 
+            // Keywords
+            const keywords = analysis.keywords_detected || analysis.keywords || [];
+            document.getElementById('keywordTags').innerHTML = keywords.slice(0, 15).map(keyword => 
                 `<span class="tag">${keyword}</span>`
-            ).join('') || '';
+            ).join('');
             
+            // Experience bullets preview
             const bullets = [
                 ...(analysis.experience_bullets_jefferies || []).slice(0, 3),
                 ...(analysis.experience_bullets_experian || []).slice(0, 2)
@@ -602,7 +679,22 @@
                 `<li>${bullet}</li>`
             ).join('');
         }
+        
+        function formatCategory(category) {
+            if (!category) return 'Unknown';
+            const names = {
+                'ENTERPRISE_RAG': '📄 Enterprise RAG',
+                'AGENTIC_AI': '🤖 Agentic AI',
+                'FINTECH_REGULATED': '🏦 FinTech/Regulated',
+                'MLOPS_PLATFORM': '⚙️ MLOps/Platform',
+                'RESEARCH_FOUNDATION': '🔬 Research/Foundation'
+            };
+            return names[category] || category;
+        }
 
+        // =================================================================
+        // PDF GENERATION - WITH CORE FOCUS AREAS
+        // =================================================================
         function downloadResume() {
             if (!currentAnalysis) {
                 showNotification('Please analyze a job description first', 'error');
@@ -620,7 +712,39 @@
                         format: 'letter'
                     });
                     
-                    // Use Times New Roman / serif font to match original
+                    // =================================================================
+                    // TEXT SANITIZATION - Fix encoding issues
+                    // =================================================================
+                    function sanitizeText(text) {
+                        if (!text) return '';
+                        return text
+                            // Fix arrow variations
+                            .replace(/→/g, 'to')
+                            .replace(/➔/g, 'to')
+                            .replace(/➜/g, 'to')
+                            .replace(/->/g, 'to')
+                            .replace(/—>/g, 'to')
+                            // Fix common encoding artifacts
+                            .replace(/!'/g, 'to')  // This specific corruption pattern
+                            .replace(/!\'[0-9]*/g, 'to 320ms')  // Another pattern
+                            .replace(/850ms\s*!['']?\s*[0-9]*/g, '850ms to 320ms')  // Catch the full pattern
+                            // Fix em-dashes and en-dashes (but not regular hyphens)
+                            .replace(/–/g, '-')
+                            .replace(/—/g, '-')
+                            // Fix smart quotes
+                            .replace(/[""]/g, '"')
+                            .replace(/['']/g, "'")
+                            // Convert middle dot to pipe (ATS-safe and professional)
+                            .replace(/·/g, '|')
+                            .replace(/•/g, '-')
+                            // Remove any remaining problematic non-ASCII
+                            .replace(/[^\x00-\x7F]/g, function(char) {
+                                const safeChars = {'…': '...'};
+                                return safeChars[char] || '';
+                            });
+                    }
+                    
+                    // Use Times New Roman / serif font to match original resume
                     doc.setFont('times', 'normal');
                     
                     let y = 20;
@@ -628,17 +752,20 @@
                     const margin = 25;
                     const contentWidth = pageWidth - 2 * margin;
                     
+                    // =========================================================
                     // NAME - Centered, Large, Serif
+                    // =========================================================
                     doc.setFontSize(24);
                     doc.setFont('times', 'bold');
                     doc.text(RESUME_DATA.name, pageWidth / 2, y, { align: 'center' });
                     
-                    // Contact line with CLICKABLE links
+                    // =========================================================
+                    // CONTACT LINE - With Clickable Links
+                    // =========================================================
                     y += 8;
                     doc.setFontSize(10);
                     doc.setFont('times', 'normal');
                     
-                    // Calculate positions for clickable links in header
                     const contactParts = [
                         { text: RESUME_DATA.location, link: null },
                         { text: ' | ', link: null },
@@ -666,13 +793,14 @@
                         xPos += doc.getTextWidth(part.text);
                     });
                     
+                    // =========================================================
                     // PROFESSIONAL SUMMARY
+                    // =========================================================
                     y += 10;
                     doc.setFontSize(12);
                     doc.setFont('times', 'bold');
                     doc.text('Professional Summary', margin, y);
                     
-                    // Horizontal line under section header
                     y += 1;
                     doc.setLineWidth(0.5);
                     doc.line(margin, y, pageWidth - margin, y);
@@ -680,11 +808,52 @@
                     y += 6;
                     doc.setFontSize(10);
                     doc.setFont('times', 'normal');
-                    const summaryLines = doc.splitTextToSize(currentAnalysis.summary, contentWidth);
+                    const summaryLines = doc.splitTextToSize(sanitizeText(currentAnalysis.summary), contentWidth);
                     doc.text(summaryLines, margin, y);
-                    y += summaryLines.length * 5 + 6;
+                    y += summaryLines.length * 5;
                     
+                    // =========================================================
+                    // CORE FOCUS AREAS - NEW SECTION (Critical for ATS)
+                    // =========================================================
+                    if (currentAnalysis.core_focus_areas) {
+                        y += 3;
+                        doc.setFontSize(10);
+                        
+                        // Make "Core Focus:" bold, rest normal - matches skill categories style
+                        const coreFocusText = sanitizeText(currentAnalysis.core_focus_areas);
+                        const colonIndex = coreFocusText.indexOf(':');
+                        
+                        if (colonIndex > 0) {
+                            const label = coreFocusText.substring(0, colonIndex + 1); // "Core Focus:"
+                            const content = coreFocusText.substring(colonIndex + 1); // the actual focus areas
+                            
+                            doc.setFont('times', 'bold');
+                            doc.text(label, margin, y);
+                            
+                            const labelWidth = doc.getTextWidth(label);
+                            doc.setFont('times', 'normal');
+                            const contentLines = doc.splitTextToSize(content, contentWidth - labelWidth - 2);
+                            doc.text(contentLines[0], margin + labelWidth + 1, y);
+                            
+                            y += 5;
+                            for (let i = 1; i < contentLines.length; i++) {
+                                doc.text(contentLines[i], margin, y);
+                                y += 5;
+                            }
+                        } else {
+                            doc.setFont('times', 'normal');
+                            const coreFocusLines = doc.splitTextToSize(coreFocusText, contentWidth);
+                            doc.text(coreFocusLines, margin, y);
+                            y += coreFocusLines.length * 5;
+                        }
+                        y += 2;
+                    } else {
+                        y += 6;
+                    }
+                    
+                    // =========================================================
                     // TECHNICAL SKILLS
+                    // =========================================================
                     doc.setFontSize(12);
                     doc.setFont('times', 'bold');
                     doc.text('Technical Skills', margin, y);
@@ -695,18 +864,17 @@
                     y += 6;
                     doc.setFontSize(10);
                     
-                    // Format skills as in original: "Category: items"
                     (currentAnalysis.technical_skills || []).forEach(skill => {
                         if (y > 260) {
                             doc.addPage();
                             y = 20;
                         }
                         
-                        // Bold the category name before the colon
-                        const colonIndex = skill.indexOf(':');
+                        const sanitizedSkill = sanitizeText(skill);
+                        const colonIndex = sanitizedSkill.indexOf(':');
                         if (colonIndex > 0) {
-                            const category = skill.substring(0, colonIndex + 1);
-                            const items = skill.substring(colonIndex + 1);
+                            const category = sanitizedSkill.substring(0, colonIndex + 1);
+                            const items = sanitizedSkill.substring(colonIndex + 1);
                             
                             doc.setFont('times', 'bold');
                             doc.text(category, margin, y);
@@ -724,13 +892,15 @@
                             }
                         } else {
                             doc.setFont('times', 'normal');
-                            const skillLines = doc.splitTextToSize(skill, contentWidth);
+                            const skillLines = doc.splitTextToSize(sanitizedSkill, contentWidth);
                             doc.text(skillLines, margin, y);
                             y += skillLines.length * 5;
                         }
                     });
                     
+                    // =========================================================
                     // PROFESSIONAL EXPERIENCE
+                    // =========================================================
                     y += 4;
                     if (y > 240) {
                         doc.addPage();
@@ -743,13 +913,15 @@
                     y += 1;
                     doc.line(margin, y, pageWidth - margin, y);
                     
-                    // Jefferies
+                    // JEFFERIES
                     y += 6;
                     doc.setFontSize(10);
                     doc.setFont('times', 'bold');
-                    doc.text('AI/ML Engineer (Contract)', margin, y);
+                    const jefferiesTitle = 'AI/ML Engineer (Contract)';
+                    doc.text(jefferiesTitle, margin, y);
+                    const jefferiesTitleWidth = doc.getTextWidth(jefferiesTitle); // Get width while still bold
                     doc.setFont('times', 'normal');
-                    doc.text(', Jefferies Group – Remote, USA', margin + doc.getTextWidth('AI/ML Engineer (Contract)'), y);
+                    doc.text(', Jefferies Group – Remote, USA', margin + jefferiesTitleWidth, y);
                     
                     doc.text('Mar 2024 – Present', pageWidth - margin, y, { align: 'right' });
                     
@@ -764,21 +936,23 @@
                             doc.addPage();
                             y = 20;
                         }
-                        const bulletLines = doc.splitTextToSize('• ' + bullet, contentWidth - 3);
+                        const bulletLines = doc.splitTextToSize('• ' + sanitizeText(bullet), contentWidth - 3);
                         doc.text(bulletLines, margin, y);
                         y += bulletLines.length * 5;
                     });
                     
-                    // Experian
+                    // EXPERIAN
                     y += 3;
                     if (y > 240) {
                         doc.addPage();
                         y = 20;
                     }
                     doc.setFont('times', 'bold');
-                    doc.text('Associate AI/ML Engineer', margin, y);
+                    const experianTitle = 'Associate AI/ML Engineer';
+                    doc.text(experianTitle, margin, y);
+                    const experianTitleWidth = doc.getTextWidth(experianTitle); // Get width while still bold
                     doc.setFont('times', 'normal');
-                    doc.text(', Experian – Hyderabad, India', margin + doc.getTextWidth('Associate AI/ML Engineer'), y);
+                    doc.text(', Experian – Hyderabad, India', margin + experianTitleWidth, y);
                     
                     doc.text('Jan 2021 – Dec 2022', pageWidth - margin, y, { align: 'right' });
                     y += 5;
@@ -789,12 +963,14 @@
                             doc.addPage();
                             y = 20;
                         }
-                        const bulletLines = doc.splitTextToSize('• ' + bullet, contentWidth - 3);
+                        const bulletLines = doc.splitTextToSize('• ' + sanitizeText(bullet), contentWidth - 3);
                         doc.text(bulletLines, margin, y);
                         y += bulletLines.length * 5;
                     });
                     
-                    // FEATURED PROJECTS with CLICKABLE links
+                    // =========================================================
+                    // FEATURED PROJECTS - With Clickable Links
+                    // =========================================================
                     y += 4;
                     if (y > 220) {
                         doc.addPage();
@@ -819,7 +995,7 @@
                         doc.setFont('times', 'bold');
                         doc.text(project.name, margin, y);
                         
-                        // GitHub | Demo on the right - CLICKABLE
+                        // GitHub | Demo links - CLICKABLE
                         doc.setFont('times', 'normal');
                         const githubText = 'GitHub';
                         const demoText = 'Demo';
@@ -833,23 +1009,22 @@
                         const githubX = pageWidth - margin - totalWidth;
                         const demoX = githubX + githubWidth + separatorWidth;
                         
-                        // GitHub link
                         doc.textWithLink(githubText, githubX, y, { url: project.github });
                         doc.text(separator, githubX + githubWidth, y);
-                        
-                        // Demo link
                         doc.textWithLink(demoText, demoX, y, { url: project.demo });
                         
                         y += 5;
                         
-                        // Project description bullets
-                        const desc = currentAnalysis.project_descriptions?.[idx] || project.bullets[0];
-                        const descLines = doc.splitTextToSize('• ' + desc, contentWidth - 3);
+                        // Project description from AI analysis
+                        const desc = currentAnalysis.project_descriptions?.[idx] || 'Production-grade AI application with modern architecture.';
+                        const descLines = doc.splitTextToSize('• ' + sanitizeText(desc), contentWidth - 3);
                         doc.text(descLines, margin, y);
                         y += descLines.length * 5 + 2;
                     });
                     
+                    // =========================================================
                     // EDUCATION
+                    // =========================================================
                     if (y > 220) {
                         doc.addPage();
                         y = 20;
@@ -870,12 +1045,10 @@
                             y = 20;
                         }
                         
-                        // Institution and degree on same line
                         doc.setFont('times', 'bold');
                         const leftText = `${edu.institution}, ${edu.degree}`;
                         doc.text(leftText, margin, y);
                         
-                        // Dates right-aligned
                         doc.setFont('times', 'normal');
                         doc.text(edu.dates, pageWidth - margin, y, { align: 'right' });
                         
@@ -884,7 +1057,9 @@
                         y += 6;
                     });
                     
+                    // =========================================================
                     // CERTIFICATIONS
+                    // =========================================================
                     y += 2;
                     doc.setFontSize(12);
                     doc.setFont('times', 'bold');
@@ -906,6 +1081,9 @@
                         y += certLines.length * 5;
                     });
                     
+                    // =========================================================
+                    // SAVE PDF
+                    // =========================================================
                     const filename = `Arun_Chukkala_${currentAnalysis.company_name.replace(/\s+/g, '_')}_${currentAnalysis.role_title.replace(/\s+/g, '_')}.pdf`;
                     doc.save(filename);
                     
@@ -917,6 +1095,9 @@
             }, 100);
         }
 
+        // =================================================================
+        // NOTIFICATIONS
+        // =================================================================
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             const notificationText = document.getElementById('notificationText');

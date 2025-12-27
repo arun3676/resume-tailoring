@@ -24,3 +24,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Test files
+test_api_key.py
