@@ -1,13 +1,16 @@
 """
-AI Resume Tailor v4.0 - Intelligent Category Detection
+AI Resume Tailor v4.2 - Research-Validated Improvements
 Built for Arun's job search - handles with care
 
-Key improvements:
-1. Job category detection (RAG, Agentic, FinTech, MLOps, Research)
-2. Core Focus Areas section generation
-3. Specialist positioning based on detected category
-4. Keyword density control (2-4x per critical term)
-5. Natural language - no keyword stuffing
+Key improvements in v4.2:
+1. Anti-buzzword rules (avoid generic phrases that trigger AI detection)
+2. Industry context requirements (e.g., "regulated fintech" for Experian)
+3. Responsible AI/Ethics detection for governance-focused jobs
+4. Conversational writing guidelines (avoid robotic AI-generated tone)
+5. All previous v4.0/4.1 features retained
+
+Research basis: Analysis of 2025 AI job market trends, ATS studies,
+recruiter feedback on AI-generated resumes, and Gartner AI predictions.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -23,7 +26,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="AI Resume Tailor", version="4.0")
+app = FastAPI(title="AI Resume Tailor", version="4.2")
 
 # Enable CORS
 app.add_middleware(
@@ -81,12 +84,13 @@ Most jobs have a PRIMARY category and sometimes a SECONDARY category.
 
 ### Category 3: FINTECH_REGULATED (Financial / Healthcare / Compliance)
 **Detection signals:**
-- Keywords: financial, fintech, fraud, compliance, risk, regulated, banking, insurance, healthcare, legal, audit, governance, security, sensitive data, PII, HIPAA, SOC2
+- Keywords: financial, fintech, fraud, compliance, risk, regulated, banking, insurance, healthcare, legal, audit, governance, security, sensitive data, PII, HIPAA, SOC2, responsible AI, AI ethics, AI governance, bias, fairness
 - Job focus: AI in regulated environments, compliance, risk management, fraud detection
-- Company types: Banks, insurance, healthcare, legal tech, fintech
+- Company types: Banks, insurance, healthcare, legal tech, fintech, credit bureaus
 
 **When detected, emphasize:**
-- Arun's Experian fraud detection experience (18% false positive reduction)
+- Arun's Experian experience at a CREDIT BUREAU (Fortune 500, highly regulated fintech)
+- Fraud detection experience (18% false positive reduction)
 - Jefferies financial services background
 - Experience with sensitive data and compliance
 - Production reliability (98%+ uptime)
@@ -115,6 +119,13 @@ Most jobs have a PRIMARY category and sometimes a SECONDARY category.
 - Evaluation frameworks (LangSmith, W&B)
 - Research prototype (Medical Diagnosis Assistant)
 - Master's degree + practical experience as PhD alternative
+
+### SPECIAL DETECTION: Responsible AI / AI Ethics
+**Additional signals (can appear alongside any category):**
+- Keywords: responsible AI, AI ethics, AI governance, bias, fairness, transparency, explainability, trustworthy AI, AI safety, guardrails, red teaming
+- If detected, ADD to summary: "commitment to responsible AI practices"
+- Include "Guardrails" in Monitoring & Evaluation skills
+- Frame model monitoring as including "bias detection" where relevant
 """
 
 
@@ -164,16 +175,22 @@ ARUN_BACKGROUND = """
 
 ### Current Role
 - Title: AI/ML Engineer (Contract)
-- Company: Jefferies Group
+- Company: Jefferies Group (Global Investment Banking Firm)
 - Location: Remote, USA
 - Duration: Mar 2024 – Present
 - Note: Concurrent with Master's program
+- Industry context: Financial services, investment banking
 
 ### Previous Role
 - Title: Associate AI/ML Engineer
-- Company: Experian
+- Company: Experian (Fortune 500 Credit Bureau - HIGHLY REGULATED FINTECH)
 - Location: Hyderabad, India
 - Duration: Jan 2021 – Dec 2022
+- Industry context: Credit bureau, regulated fintech, consumer data protection
+- IMPORTANT: Experian is a CREDIT BUREAU handling sensitive consumer financial data
+  - Subject to strict regulations (FCRA, GDPR, SOC2)
+  - Processes billions of credit records
+  - Fraud detection is CRITICAL for consumer protection
 
 ### Education
 - MS Computer Science, Lamar University (Jan 2023 – Dec 2024)
@@ -256,6 +273,39 @@ Keywords should appear NATURALLY across these sections:
 ### Natural Language Priority
 The resume must read naturally to a human recruiter AFTER passing ATS.
 Keyword optimization is useless if a human rejects it for sounding fake.
+
+## ANTI-BUZZWORD RULES (Critical for Human Review)
+
+### NEVER USE These Generic Buzzwords (They trigger AI-detection and recruiter eye-rolls):
+- "Team player" / "Team-oriented"
+- "Results-driven" / "Results-oriented"
+- "Detail-oriented"
+- "Proven track record"
+- "Self-motivated" / "Self-starter"
+- "Hardworking" / "Hard worker"
+- "Go-getter"
+- "Think outside the box"
+- "Synergy" / "Synergies"
+- "Leverage" (as a verb without specific context)
+- "Dynamic"
+- "Passionate" (unless describing something specific)
+- "Strategic thinker"
+- "Excellent communication skills" (show, don't tell)
+
+### INSTEAD, Use Specific Evidence:
+❌ BAD: "Results-driven AI engineer with proven track record"
+✅ GOOD: "AI engineer who reduced manual review time by 30% and cut inference latency from 850ms to 320ms"
+
+❌ BAD: "Team player with excellent communication skills"
+✅ GOOD: "Collaborated with cross-functional data engineering teams to optimize real-time data pipelines"
+
+❌ BAD: "Passionate about machine learning"
+✅ GOOD: "Built and deployed 4 production ML systems including RAG, multi-agent, and fraud detection applications"
+
+### The "Can You Defend This In An Interview?" Test
+Before including any phrase, ask: "Can I give a specific example of this in an interview?"
+- If YES → Include it with specifics
+- If NO → Remove it or replace with concrete evidence
 """
 
 
@@ -295,6 +345,7 @@ Analyze the job description and identify:
 - SECONDARY category (if applicable)
 - Key technical requirements
 - Cultural/soft skill signals
+- WHETHER "Responsible AI" / "AI Ethics" is mentioned (affects summary and skills)
 
 ### Step 2: Generate Tailored Content
 Based on your category detection, generate resume content that positions Arun as a SPECIALIST in what this job needs.
@@ -307,23 +358,25 @@ Return a JSON object with this EXACT structure:
         "primary": "ENTERPRISE_RAG | AGENTIC_AI | FINTECH_REGULATED | MLOPS_PLATFORM | RESEARCH_FOUNDATION",
         "secondary": "category or null",
         "confidence": "HIGH | MEDIUM | LOW",
-        "reasoning": "1-2 sentences explaining why you chose this category"
+        "reasoning": "1-2 sentences explaining why you chose this category",
+        "responsible_ai_mentioned": true/false
     }},
-    "core_focus_areas": "Core Focus: [phrase] · [phrase] · [phrase] · [phrase] · [phrase] · [phrase]",
-    "summary": "3-4 sentence professional summary positioning Arun as the specialist this job needs. Start with '3+ years of experience' and the specialist title. Include 1-2 key metrics. End with what makes him valuable for THIS specific role.",
+    "core_focus_areas": "Core Focus: [phrase] | [phrase] | [phrase] | [phrase] | [phrase] | [phrase]",
+    "summary": "3-4 sentence professional summary positioning Arun as the specialist this job needs. Start with '3+ years of experience' and the specialist title. Include 1-2 key metrics. End with what makes him valuable for THIS specific role. AVOID generic buzzwords. Be specific and conversational.",
     "technical_skills": [
         "Programming & Development: [reorder to put job-critical languages/frameworks FIRST - Python, FastAPI, JavaScript, React if relevant. NEVER add skill levels like (expert) or (proficient)]",
         "AI/ML Frameworks & Tools: [CRITICAL: If job is agentic, start with LangChain, LangGraph, LlamaIndex, CrewAI - these are 2025's most requested skills]",
-        "LLMs & Generative AI: [reorder to put job-relevant models/techniques FIRST - OpenAI GPT-4o, Anthropic Claude Sonnet, Google Gemini, Prompt Engineering, Fine-tuning]",
+        "LLMs & Generative AI: [reorder to put job-relevant models/techniques FIRST - OpenAI GPT, Anthropic Claude Sonnet, Google Gemini, Prompt Engineering, Fine-tuning]",
         "Agentic AI & Orchestration: [ONLY if job is agentic - LangGraph, CrewAI, AutoGen, Multi-Agent Systems, MCP, Tool Orchestration]",
         "MLOps & Deployment: [include Docker, Kubernetes if job requires, CI/CD, GitHub Actions, Azure ML, AWS, vLLM]",
         "Data & Vector Databases: [Pinecone, Azure AI Search, ChromaDB, FAISS, Weaviate based on job requirements]",
         "Development Tools & IDEs: Cursor AI, Windsurf AI, VS Code, Jupyter, Linux/Unix",
-        "Monitoring & Evaluation: [reorder - LangSmith, Weights & Biases, MLflow, Guardrails, A/B Testing]"
+        "Monitoring & Evaluation: [reorder - LangSmith, Weights & Biases, MLflow, Guardrails, A/B Testing - include Guardrails if responsible AI mentioned]"
     ],
     "experience_bullets_jefferies": [
         "5 bullets reframed for the detected category",
         "Each bullet: Action verb + what you did + technology used + quantified result",
+        "Include INDUSTRY CONTEXT: 'at a global investment bank' or 'for financial document processing'",
         "Emphasize the aspects of Jefferies work most relevant to THIS job",
         "Preserve all metrics exactly (30%, 62%, 850ms to 320ms, 15M+)",
         "Use terminology from the job description naturally"
@@ -331,9 +384,11 @@ Return a JSON object with this EXACT structure:
     "experience_bullets_experian": [
         "4-5 bullets reframed for the detected category",
         "Each bullet: Action verb + what you did + technology used + quantified result",
+        "CRITICAL: Include INDUSTRY CONTEXT: 'at a Fortune 500 credit bureau' or 'in regulated fintech environment'",
         "Emphasize aspects most relevant to THIS job",
         "Preserve all metrics exactly (18%, 25%, 98%+)",
-        "If job is NOT FinTech focused, still include fraud detection but frame it as 'anomaly detection' or 'ML-based classification'"
+        "If job mentions compliance/regulated/fintech: emphasize 'credit bureau', 'consumer data protection', 'regulated environment'",
+        "If job is NOT FinTech focused: still mention 'fraud detection' but frame it as 'anomaly detection in high-stakes environment'"
     ],
     "project_descriptions": [
         "1-2 sentences for LLM Code Analyzer emphasizing aspects relevant to THIS job. Do NOT start with project name.",
@@ -363,6 +418,10 @@ Return a JSON object with this EXACT structure:
 8. ✅ Keyword density is 2-4x per critical term, distributed naturally
 9. ✅ Language is natural, not robotic or keyword-stuffed
 10. ✅ A human recruiter would find this compelling, not just ATS
+11. ✅ NO GENERIC BUZZWORDS used (team player, results-driven, proven track record, etc.)
+12. ✅ Experience bullets include INDUSTRY CONTEXT (e.g., "at a credit bureau", "for financial services")
+13. ✅ Summary sounds CONVERSATIONAL, not like AI generated it
+14. ✅ If Responsible AI mentioned in JD: added to summary AND Guardrails in skills
 
 ---
 
@@ -382,6 +441,10 @@ Return a JSON object with this EXACT structure:
 12. **Kubernetes for scale** - If job mentions Kubernetes, k8s, or container orchestration at scale, include in MLOps line
 13. **NO SKILL LEVEL TAGS** - NEVER add (expert), (proficient), (advanced), (intermediate) etc. after skills. Just list the skill name. "Python" NOT "Python (expert)". This looks unprofessional and raises expectations.
 14. **Core Focus separator** - ALWAYS use "|" (pipe) as separator in Core Focus line, NEVER use "-" or "·". Example: "Core Focus: RAG Systems | LLM Orchestration | Vector Search"
+15. **NO GENERIC BUZZWORDS** - NEVER use: "team player", "results-driven", "detail-oriented", "proven track record", "self-motivated", "passionate about", "excellent communication skills". These trigger AI-detection and recruiter rejection. ALWAYS replace with SPECIFIC evidence and metrics.
+16. **INDUSTRY CONTEXT REQUIRED** - Every experience section MUST include industry context. Jefferies = "global investment bank" or "financial services". Experian = "Fortune 500 credit bureau" or "regulated fintech". This adds credibility and specificity.
+17. **RESPONSIBLE AI DETECTION** - If JD mentions: "responsible AI", "AI ethics", "AI governance", "fairness", "bias", "transparency", "trustworthy AI" → Add "commitment to responsible AI practices" to summary AND ensure "Guardrails" is in Monitoring skills.
+18. **CONVERSATIONAL TONE TEST** - Read the summary aloud. If it sounds like corporate buzzword soup or an AI wrote it, rewrite it to sound like a confident human professional describing their work.
 
 Return ONLY the JSON object. No markdown code blocks. No preamble. No explanation after.
 """
@@ -399,7 +462,7 @@ async def read_root():
     index_path = os.path.join(os.path.dirname(__file__), "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
-    return {"message": "AI Resume Tailor API v4.0", "status": "running"}
+    return {"message": "AI Resume Tailor API v4.2", "status": "running"}
 
 
 @app.get("/health")
@@ -408,8 +471,15 @@ async def health():
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     return {
         "status": "healthy",
-        "version": "4.0",
-        "features": ["category_detection", "core_focus_areas", "keyword_density_control"],
+        "version": "4.2",
+        "features": [
+            "category_detection",
+            "core_focus_areas", 
+            "keyword_density_control",
+            "anti_buzzword_rules",
+            "industry_context",
+            "responsible_ai_detection"
+        ],
         "api_key_configured": bool(api_key),
         "api_key_prefix": api_key[:10] + "..." if api_key else None
     }
@@ -425,6 +495,9 @@ async def analyze_job(request: JobRequest):
     2. Generates Core Focus Areas section
     3. Creates specialist-positioned resume content
     4. Controls keyword density for ATS optimization
+    5. Ensures natural language without buzzwords (v4.2)
+    6. Adds industry context to experience (v4.2)
+    7. Detects Responsible AI requirements (v4.2)
     """
     try:
         # Validate input
@@ -497,7 +570,7 @@ async def analyze_job(request: JobRequest):
             "analysis": analysis,
             "company_name": request.company_name,
             "role_title": request.role_title,
-            "version": "4.0"
+            "version": "4.2"
         }
         
     except json.JSONDecodeError as e:
@@ -533,13 +606,17 @@ if __name__ == "__main__":
     import uvicorn
     
     print("\n" + "=" * 70)
-    print("🚀 AI RESUME TAILOR v4.0 - INTELLIGENT CATEGORY DETECTION")
+    print("🚀 AI RESUME TAILOR v4.2 - RESEARCH-VALIDATED IMPROVEMENTS")
     print("=" * 70)
     print("\n✅ Features:")
     print("   • Job category detection (RAG, Agentic, FinTech, MLOps, Research)")
     print("   • Core Focus Areas generation")
     print("   • Specialist positioning")
     print("   • Keyword density control")
+    print("   • Anti-buzzword rules (NEW in v4.2)")
+    print("   • Industry context requirements (NEW in v4.2)")
+    print("   • Responsible AI detection (NEW in v4.2)")
+    print("   • Conversational tone validation (NEW in v4.2)")
     print("\n✅ Server starting on http://localhost:8000")
     print("✅ Open your frontend HTML in browser")
     print("\n💡 TIP: Keep this terminal window open")
